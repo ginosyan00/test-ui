@@ -1,17 +1,193 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hy">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Ինտերակտիվ Մասնիկներ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        .info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.3);
+            padding: 15px 25px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+        }
+
+        button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        button:hover {
+            background: rgba(255,255,255,0.4);
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+    </style>
 </head>
 <body>
-    <h1>Barev bolor ashxarhi hayerin</h1>
-    <p>No one talks about the first million.</p>
-    <p>Who is your hero in your life</p>
-    <p>To be loved or love someone</p>
-    <p>sssaa</p>
-    <h4>new commit</h4>
-    
+    <canvas id="canvas"></canvas>
+    <div class="info">
+        <div>🎨 Մկնիկով շարժիր և սեղմիր</div>
+        <div>✨ Մասնիկներ: <span id="count">0</span></div>
+    </div>
+    <div class="controls">
+        <button id="clear">Մաքրել</button>
+        <button id="toggle">Դադարեցնել</button>
+        <button id="rainbow">Ծիածան 🌈</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        let mouseX = 0;
+        let mouseY = 0;
+        let isMouseDown = false;
+        let isPaused = false;
+        let rainbowMode = false;
+        let hue = 0;
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 8;
+                this.vy = (Math.random() - 0.5) * 8;
+                this.radius = Math.random() * 3 + 2;
+                this.life = 100;
+                this.color = rainbowMode ? `hsl(${hue}, 100%, 60%)` : `hsl(${Math.random() * 60 + 200}, 100%, 70%)`;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.1;
+                this.life -= 0.5;
+                this.radius *= 0.99;
+            }
+
+            draw() {
+                ctx.globalAlpha = this.life / 100;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        }
+
+        function animate() {
+            if (!isPaused) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                if (isMouseDown) {
+                    for (let i = 0; i < 5; i++) {
+                        particles.push(new Particle(mouseX, mouseY));
+                    }
+                }
+
+                particles = particles.filter(p => p.life > 0);
+
+                particles.forEach(particle => {
+                    particle.update();
+                    particle.draw();
+                });
+
+                document.getElementById('count').textContent = particles.length;
+
+                if (rainbowMode) {
+                    hue = (hue + 2) % 360;
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        canvas.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        canvas.addEventListener('mousedown', () => {
+            isMouseDown = true;
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+
+        document.getElementById('clear').addEventListener('click', () => {
+            particles = [];
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
+
+        document.getElementById('toggle').addEventListener('click', (e) => {
+            isPaused = !isPaused;
+            e.target.textContent = isPaused ? 'Շարունակել' : 'Դադարեցնել';
+        });
+
+        document.getElementById('rainbow').addEventListener('click', (e) => {
+            rainbowMode = !rainbowMode;
+            e.target.style.background = rainbowMode ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.2)';
+        });
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        animate();
+    </script>
 </body>
 </html>
